@@ -24,5 +24,10 @@
         </activity>
         <receiver android:name=".ReminderReceiver" android:exported="false"/>
         <service android:name=".WakeWordService" android:exported="false" android:foregroundServiceType="microphone" android:stopWithTask="false"/>
+        <service android:name=".JarvisVoiceInteractionService" android:label="JARVIS" android:permission="android.permission.BIND_VOICE_INTERACTION" android:exported="true">
+            <meta-data android:name="android.voice_interaction" android:resource="@xml/voice_interaction_service"/>
+            <intent-filter><action android:name="android.service.voice.VoiceInteractionService"/></intent-filter>
+        </service>
+        <service android:name=".JarvisVoiceSessionService" android:permission="android.permission.BIND_VOICE_INTERACTION" android:exported="true"/>
     </application>
 </manifest>
