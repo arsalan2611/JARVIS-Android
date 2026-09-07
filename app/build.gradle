@@ -10,13 +10,15 @@ android {
         applicationId "com.jarvis.fa"
         minSdk 26
         targetSdk 35
-        versionCode 6
-        versionName "6.0-core"
+        versionCode 7
+        versionName "7.0-architecture"
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
