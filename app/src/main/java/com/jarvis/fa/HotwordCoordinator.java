@@ -14,8 +14,12 @@ public class HotwordCoordinator {
     }
     public String mode(){return isSystemAssistant()?"SYSTEM_ASSISTANT":"FALLBACK_WAKE";}
     public String status(){
-        if(isSystemAssistant())return "SYSTEM HOTWORD PATH • JARVIS دستیار فعال گوشی است";
-        return prefs.getBoolean("wakeEnabled",false)?"FALLBACK WAKE • شنود پس‌زمینه فعال":"WAKE • غیرفعال";
+        if(isSystemAssistant())return "SYSTEM ASSISTANT • Assist Gesture آماده";
+        if(prefs.getBoolean("wakeEnabled",false)){
+            String engine=prefs.getString("wakeEngine","در حال تشخیص");
+            return "WAKE • "+engine+" • شنود پس‌زمینه فعال";
+        }
+        return "WAKE • غیرفعال";
     }
     public boolean setFallbackWake(boolean on){
         if(isSystemAssistant()){
