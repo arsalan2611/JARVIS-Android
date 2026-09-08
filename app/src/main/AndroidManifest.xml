@@ -18,6 +18,9 @@
         <intent><action android:name="android.intent.action.TTS_SERVICE"/></intent>
     </queries>
     <application android:name=".JarvisApp" android:allowBackup="false" android:label="JARVIS فارسی" android:theme="@style/AppTheme" android:usesCleartextTraffic="false">
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
+        </provider>
         <activity android:name=".MainActivity" android:screenOrientation="portrait" android:launchMode="singleTop" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>
