@@ -16,7 +16,11 @@ public class ActionReceiptStore {
 
     public ActionReceiptStore(Context c){p=c.getSharedPreferences(PREF,Context.MODE_PRIVATE);}
 
-    public synchronized void add(String command,String result){
+    public synchronized void add(String command,String result){record(command,result,false);}
+    public synchronized void record(String command,String result){record(command,result,false);}
+    public synchronized void recordVerified(String command,String result){record(command,result,true);}
+
+    private synchronized void record(String command,String result,boolean verified){
         try{
             JSONArray old=new JSONArray(p.getString(KEY,"[]"));
             JSONArray fresh=new JSONArray();
@@ -24,6 +28,7 @@ public class ActionReceiptStore {
             x.put("ts",System.currentTimeMillis());
             x.put("command",safe(command,500));
             x.put("result",safe(result,1200));
+            x.put("verified",verified);
             fresh.put(x);
             for(int i=0;i<old.length()&&fresh.length()<MAX;i++)fresh.put(old.get(i));
             p.edit().putString(KEY,fresh.toString()).apply();
@@ -54,7 +59,8 @@ public class ActionReceiptStore {
     private String format(JSONObject x){
         long ts=x.optLong("ts",0);
         String when=ts>0?new SimpleDateFormat("MM/dd HH:mm",Locale.US).format(new Date(ts)):"";
-        return "• "+when+"\nفرمان: "+x.optString("command")+"\nنتیجه گزارش‌شده: "+x.optString("result");
+        String v=x.optBoolean("verified",false)?"تأییدشده":"گزارش‌شده";
+        return "• "+when+" • "+v+"\nفرمان: "+x.optString("command")+"\nنتیجه: "+x.optString("result");
     }
     private String safe(String s,int max){if(s==null)return "";s=s.trim();return s.length()<=max?s:s.substring(0,max);}
 }
