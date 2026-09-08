@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.view.*;
 import android.widget.*;
-import java.util.*;
 
 public class JarvisHomeActivity extends Activity {
     private final int bg=Color.rgb(2,8,16),panel=Color.rgb(7,20,34),panel2=Color.rgb(9,27,45),accent=Color.rgb(56,225,255),text=Color.WHITE,muted=Color.rgb(145,177,198),good=Color.rgb(107,235,181);
@@ -31,8 +30,8 @@ public class JarvisHomeActivity extends Activity {
 
         LinearLayout head=new LinearLayout(this);head.setGravity(Gravity.CENTER_VERTICAL);head.setOrientation(LinearLayout.HORIZONTAL);
         TextView title=tv("J A R V I S",28);title.setTextColor(accent);title.setLetterSpacing(.14f);head.addView(title,new LinearLayout.LayoutParams(0,-2,1));
-        TextView ver=tv("BUILD 28",11);ver.setTextColor(muted);head.addView(ver);root.addView(head);
-        TextView sub=tv("PERSONAL AI COMMAND CENTER",11);sub.setTextColor(muted);root.addView(sub);
+        TextView ver=tv("BUILD 29",11);ver.setTextColor(muted);head.addView(ver);root.addView(head);
+        TextView sub=tv("PERSONAL AI COMMAND CENTER • FILE INTELLIGENCE",11);sub.setTextColor(muted);root.addView(sub);
 
         LinearLayout core=card();core.setGravity(Gravity.CENTER);
         PulseView pulse=new PulseView();core.addView(pulse,new LinearLayout.LayoutParams(-1,dp(250)));
@@ -44,19 +43,19 @@ public class JarvisHomeActivity extends Activity {
         TextView quickTitle=tv("دسترسی سریع",13);quickTitle.setTextColor(muted);root.addView(quickTitle);
         LinearLayout q1=new LinearLayout(this);
         Button vision=btn("◈ Vision");vision.setOnClickListener(v->startActivity(new Intent(this,VisionActivity.class)));q1.addView(vision,new LinearLayout.LayoutParams(0,dp(54),1));
-        Button files=btn("▣ Files");files.setOnClickListener(v->new WorkTools(this).openFiles("*/*"));q1.addView(files,new LinearLayout.LayoutParams(0,dp(54),1));
+        Button files=btn("▣ File AI");files.setOnClickListener(v->startActivity(new Intent(this,FileIntelligenceActivity.class)));q1.addView(files,new LinearLayout.LayoutParams(0,dp(54),1));
         Button chat=btn("⌁ Console");chat.setOnClickListener(v->openConsole(false));q1.addView(chat,new LinearLayout.LayoutParams(0,dp(54),1));root.addView(q1);
 
         LinearLayout q2=new LinearLayout(this);
         Button health=btn("✓ Health");health.setOnClickListener(v->startActivity(new Intent(this,DiagnosticsActivity.class)));q2.addView(health,new LinearLayout.LayoutParams(0,dp(50),1));
-        Button assist=btn("◇ Assistant");assist.setOnClickListener(v->assistantSettings());q2.addView(assist,new LinearLayout.LayoutParams(0,dp(50),1));
+        Button history=btn("≡ Actions");history.setOnClickListener(v->startActivity(new Intent(this,ActionHistoryActivity.class)));q2.addView(history,new LinearLayout.LayoutParams(0,dp(50),1));
         Button refresh=btn("↻ Refresh");refresh.setOnClickListener(v->refresh());q2.addView(refresh,new LinearLayout.LayoutParams(0,dp(50),1));root.addView(q2);
 
-        LinearLayout todayCard=card();TextView tt=tv("TODAY",12);tt.setTextColor(accent);todayCard.addView(tt);today=tv("",14);todayCard.addView(today);root.addView(todayCard);
+        LinearLayout todayCard=card();TextView tt=tv("TODAY // MISSION QUEUE",12);tt.setTextColor(accent);todayCard.addView(tt);today=tv("",14);todayCard.addView(today);Button plan=btn("✦ تحلیل برنامه امروز در Console");plan.setOnClickListener(v->{Intent i=new Intent(this,MainActivity.class);i.putExtra("prefill_command","برنامه و یادآوری‌های امروز من را بررسی کن و مهم‌ترین اولویت‌ها را کوتاه بگو");startActivity(i);});todayCard.addView(plan,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(todayCard);
 
-        LinearLayout statusCard=card();TextView st=tv("SYSTEM",12);st.setTextColor(accent);statusCard.addView(st);backend=tv("",13);pc=tv("",13);statusCard.addView(backend);statusCard.addView(pc);root.addView(statusCard);
+        LinearLayout statusCard=card();TextView st=tv("SYSTEM LINK",12);st.setTextColor(accent);statusCard.addView(st);backend=tv("",13);pc=tv("",13);statusCard.addView(backend);statusCard.addView(pc);Button assist=btn("◇ تنظیم JARVIS به‌عنوان System Assistant");assist.setOnClickListener(v->assistantSettings());statusCard.addView(assist,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(statusCard);
 
-        LinearLayout receiptCard=card();TextView rt=tv("LAST ACTION",12);rt.setTextColor(accent);receiptCard.addView(rt);lastAction=tv("",13);lastAction.setTextColor(muted);receiptCard.addView(lastAction);Button history=btn("مشاهده سوابق اقدامات");history.setOnClickListener(v->startActivity(new Intent(this,ActionHistoryActivity.class)));receiptCard.addView(history,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(receiptCard);
+        LinearLayout receiptCard=card();TextView rt=tv("LAST ACTION RECEIPT",12);rt.setTextColor(accent);receiptCard.addView(rt);lastAction=tv("",13);lastAction.setTextColor(muted);receiptCard.addView(lastAction);root.addView(receiptCard);
 
         TextView foot=tv("JARVIS • PRIVATE BY DESIGN • LOCAL CONTROL",10);foot.setTextColor(Color.rgb(80,118,139));foot.setGravity(Gravity.CENTER);root.addView(foot);
         sc.addView(root);setContentView(sc);
