@@ -89,7 +89,9 @@ public class V12AgentCore {
             return;
         }
 
-        delegate.run(q,cb::onResult);
+        String memoryContext=structured.context();
+        String contextual="[حافظه ساختاریافته JARVIS — فقط اگر به درخواست مرتبط است استفاده کن]\n"+memoryContext+"\n\n[درخواست فعلی کاربر]\n"+q;
+        delegate.run(contextual,cb::onResult);
     }
 
     public String memoryContext(){return structured.context();}
