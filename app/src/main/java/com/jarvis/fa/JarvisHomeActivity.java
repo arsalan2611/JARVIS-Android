@@ -2,15 +2,18 @@ package com.jarvis.fa;
 
 import android.app.Activity;
 import android.animation.ValueAnimator;
+import android.app.role.RoleManager;
 import android.content.Intent;
 import android.graphics.*;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.*;
 import android.widget.*;
 
 public class JarvisHomeActivity extends Activity {
+    private static final int REQ_ASSISTANT_ROLE=9101;
     private final int bg=Color.rgb(2,8,16),panel=Color.rgb(7,20,34),panel2=Color.rgb(9,27,45),accent=Color.rgb(56,225,255),text=Color.WHITE,muted=Color.rgb(145,177,198),good=Color.rgb(107,235,181);
     private TextView assistant,backend,pc,today,lastAction;
     private ReminderEngine reminders; private ProductionConfig prod; private PcBridge bridge; private HotwordCoordinator hotword; private ActionReceiptStore receipts;
@@ -31,13 +34,13 @@ public class JarvisHomeActivity extends Activity {
         LinearLayout head=new LinearLayout(this);head.setGravity(Gravity.CENTER_VERTICAL);head.setOrientation(LinearLayout.HORIZONTAL);
         TextView title=tv("J A R V I S",28);title.setTextColor(accent);title.setLetterSpacing(.14f);head.addView(title,new LinearLayout.LayoutParams(0,-2,1));
         TextView ver=tv("BUILD 29",11);ver.setTextColor(muted);head.addView(ver);root.addView(head);
-        TextView sub=tv("PERSONAL AI COMMAND CENTER • FILE INTELLIGENCE",11);sub.setTextColor(muted);root.addView(sub);
+        TextView sub=tv("VOICE • SECURITY • FILE INTELLIGENCE",11);sub.setTextColor(muted);root.addView(sub);
 
         LinearLayout core=card();core.setGravity(Gravity.CENTER);
         PulseView pulse=new PulseView();core.addView(pulse,new LinearLayout.LayoutParams(-1,dp(250)));
         TextView ready=tv("ONLINE • آماده فرمان",14);ready.setTextColor(accent);ready.setGravity(Gravity.CENTER);core.addView(ready);
         assistant=tv("",12);assistant.setGravity(Gravity.CENTER);assistant.setTextColor(muted);core.addView(assistant);
-        Button speak=btn("◉  صحبت با JARVIS");speak.setTextColor(Color.rgb(0,20,28));speak.setBackground(shape(accent,28));speak.setOnClickListener(v->openConsole(true));core.addView(speak,new LinearLayout.LayoutParams(-1,dp(58)));
+        Button speak=btn("◉  صحبت فارسی با JARVIS");speak.setTextColor(Color.rgb(0,20,28));speak.setBackground(shape(accent,28));speak.setOnClickListener(v->startActivity(new Intent(this,JarvisVoiceActivity.class)));core.addView(speak,new LinearLayout.LayoutParams(-1,dp(58)));
         root.addView(core);
 
         TextView quickTitle=tv("دسترسی سریع",13);quickTitle.setTextColor(muted);root.addView(quickTitle);
@@ -53,7 +56,7 @@ public class JarvisHomeActivity extends Activity {
 
         LinearLayout todayCard=card();TextView tt=tv("TODAY // MISSION QUEUE",12);tt.setTextColor(accent);todayCard.addView(tt);today=tv("",14);todayCard.addView(today);Button plan=btn("✦ تحلیل برنامه امروز در Console");plan.setOnClickListener(v->{Intent i=new Intent(this,MainActivity.class);i.putExtra("prefill_command","برنامه و یادآوری‌های امروز من را بررسی کن و مهم‌ترین اولویت‌ها را کوتاه بگو");startActivity(i);});todayCard.addView(plan,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(todayCard);
 
-        LinearLayout statusCard=card();TextView st=tv("SYSTEM LINK",12);st.setTextColor(accent);statusCard.addView(st);backend=tv("",13);pc=tv("",13);statusCard.addView(backend);statusCard.addView(pc);Button assist=btn("◇ تنظیم JARVIS به‌عنوان System Assistant");assist.setOnClickListener(v->assistantSettings());statusCard.addView(assist,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(statusCard);
+        LinearLayout statusCard=card();TextView st=tv("SYSTEM & PRIVACY",12);st.setTextColor(accent);statusCard.addView(st);backend=tv("",13);pc=tv("",13);statusCard.addView(backend);statusCard.addView(pc);Button assist=btn("◇ درخواست نقش دستیار اصلی گوشی");assist.setOnClickListener(v->requestAssistantRole());statusCard.addView(assist,new LinearLayout.LayoutParams(-1,dp(48)));TextView privacy=tv("کلیدها در Android Keystore رمزگذاری می‌شوند. برای گفتار می‌توانی بین Accuracy و Private/Local انتخاب کنی.",11);privacy.setTextColor(muted);statusCard.addView(privacy);root.addView(statusCard);
 
         LinearLayout receiptCard=card();TextView rt=tv("LAST ACTION RECEIPT",12);rt.setTextColor(accent);receiptCard.addView(rt);lastAction=tv("",13);lastAction.setTextColor(muted);receiptCard.addView(lastAction);root.addView(receiptCard);
 
@@ -70,7 +73,19 @@ public class JarvisHomeActivity extends Activity {
         lastAction.setText(receipts.latest());
     }
     private void openConsole(boolean listen){Intent i=new Intent(this,MainActivity.class);if(listen)i.putExtra("auto_listen",true);startActivity(i);}
-    private void assistantSettings(){try{startActivity(new Intent("android.settings.VOICE_INPUT_SETTINGS"));}catch(Exception e){startActivity(new Intent(Settings.ACTION_SETTINGS));}}
+    private void requestAssistantRole(){
+        if(Build.VERSION.SDK_INT>=29){
+            try{
+                RoleManager rm=(RoleManager)getSystemService(ROLE_SERVICE);
+                if(rm!=null&&rm.isRoleAvailable(RoleManager.ROLE_ASSISTANT)){
+                    if(rm.isRoleHeld(RoleManager.ROLE_ASSISTANT)){Toast.makeText(this,"JARVIS همین حالا دستیار اصلی است.",Toast.LENGTH_SHORT).show();refresh();return;}
+                    startActivityForResult(rm.createRequestRoleIntent(RoleManager.ROLE_ASSISTANT),REQ_ASSISTANT_ROLE);return;
+                }
+            }catch(Exception ignored){}
+        }
+        try{startActivity(new Intent("android.settings.VOICE_INPUT_SETTINGS"));}catch(Exception e){startActivity(new Intent(Settings.ACTION_SETTINGS));}
+    }
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode==REQ_ASSISTANT_ROLE){hotword.reconcile();refresh();Toast.makeText(this,resultCode==RESULT_OK?"JARVIS به‌عنوان Assistant انتخاب شد.":"انتخاب Assistant تکمیل نشد.",Toast.LENGTH_SHORT).show();}}
 
     private class PulseView extends View{
         private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG),p2=new Paint(Paint.ANTI_ALIAS_FLAG);private float phase=0f;private ValueAnimator anim;
