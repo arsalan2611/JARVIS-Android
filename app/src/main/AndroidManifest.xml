@@ -25,6 +25,7 @@
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>
         <activity android:name=".JarvisSetupActivity" android:screenOrientation="portrait" android:exported="false"/>
+        <activity android:name=".ConnectedServicesActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".MainActivity" android:screenOrientation="portrait" android:launchMode="singleTop" android:exported="false"/>
         <activity android:name=".JarvisVoiceActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".VisionActivity" android:screenOrientation="portrait" android:exported="false"/>
