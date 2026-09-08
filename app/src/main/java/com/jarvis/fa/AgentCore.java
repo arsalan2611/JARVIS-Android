@@ -28,10 +28,11 @@ public class AgentCore {
     private final SystemHealth health;
     private final AgentPolicy policy;
     private final ProductionConfig prod;
+    private final ConnectedServices connected;
     private final ExecutorService ex=Executors.newSingleThreadExecutor();
     private volatile StateCallback stateCallback;
 
-    public AgentCore(Activity a){activity=a;actions=new JarvisActions(a);reminders=new ReminderEngine(a);memory=new MemoryStore(a);secrets=new SecureStore(a);personal=new PersonalActions(a);timeParser=new PersianTimeParser();work=new WorkTools(a);pc=new PcBridge(a);health=new SystemHealth(a);policy=new AgentPolicy();prod=new ProductionConfig(a);}
+    public AgentCore(Activity a){activity=a;actions=new JarvisActions(a);reminders=new ReminderEngine(a);memory=new MemoryStore(a);secrets=new SecureStore(a);personal=new PersonalActions(a);timeParser=new PersianTimeParser();work=new WorkTools(a);pc=new PcBridge(a);health=new SystemHealth(a);policy=new AgentPolicy();prod=new ProductionConfig(a);connected=new ConnectedServices(a);}
     public void setStateCallback(StateCallback cb){stateCallback=cb;}
     private void state(VoiceStateMachine.State s){StateCallback cb=stateCallback;if(cb!=null)activity.runOnUiThread(()->cb.onState(s));}
     public void run(String userText, Callback cb){ex.submit(()->{String answer;try{state(VoiceStateMachine.State.THINKING);answer=agentLoop(userText);}catch(Exception e){answer=prettyError(e.getMessage());}final String out=answer;activity.runOnUiThread(()->cb.onResult(out));});}
@@ -61,7 +62,7 @@ public class AgentCore {
     private String endpoint(){if(!prod.productionMode())return OPENAI_ENDPOINT;String u=prod.backendUrl();if(u.endsWith("/responses"))return u;return u.replaceAll("/$","")+"/v1/responses";}
     private JSONArray functionCalls(JSONObject root){JSONArray found=new JSONArray(),output=root.optJSONArray("output");if(output==null)return found;for(int i=0;i<output.length();i++){JSONObject o=output.optJSONObject(i);if(o!=null&&"function_call".equals(o.optString("type")))found.put(o);}return found;}
     private JSONObject baseRequest(String q)throws Exception{return new JSONObject().put("model",MODEL).put("instructions",instructions()).put("input",q).put("tools",tools()).put("tool_choice","auto");}
-    private String instructions(){String now=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z",Locale.US).format(new Date());return "تو JARVIS 1.0 هستی؛ دستیار عامل‌محور فارسی. زمان فعلی گوشی: "+now+". درخواست را تا جای ممکن کامل انجام بده و بعد از ابزار نتیجه را بررسی کن. برای زمان فارسی از create_reminder_fa استفاده کن. شماره مخاطب را حدس نزن. برای قرار از create_calendar_event استفاده کن. اگر چند اقدام لازم است مرحله‌ای اجرا کن. هیچ اقدامی را جعل نکن. عملیات اثرگذار باید طبق نتیجه ابزار و Policy باشد. برای کار روی کامپیوتر فقط از pc_command استفاده کن و اگر Bridge تنظیم نیست صریح بگو. پاسخ نهایی کوتاه و طبیعی باشد.\n\nحافظه گفتگو:\n"+memory.context();}
+    private String instructions(){String now=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z",Locale.US).format(new Date());return "تو JARVIS 1.0 هستی؛ دستیار عامل‌محور فارسی. زمان فعلی گوشی: "+now+". درخواست را تا جای ممکن کامل انجام بده و بعد از ابزار نتیجه را بررسی کن. برای زمان فارسی از create_reminder_fa استفاده کن. شماره مخاطب را حدس نزن. برای Gmail و Google Calendar در حالت Production از ابزارهای google_* استفاده کن؛ اگر اتصال آماده نبود صریح بگو. gmail_draft فقط Draft می‌سازد و هرگز معادل Send نیست؛ هرگز ادعا نکن ایمیل ارسال شده. اگر Google Calendar متصل باشد برای ثبت مستقیم رویداد از google_calendar_create استفاده کن؛ create_calendar_event فقط فرم سیستم را باز می‌کند. اگر چند اقدام لازم است مرحله‌ای اجرا کن. هیچ اقدامی را جعل نکن. عملیات اثرگذار باید طبق نتیجه ابزار و Policy باشد. برای کار روی کامپیوتر فقط از pc_command استفاده کن و اگر Bridge تنظیم نیست صریح بگو. پاسخ نهایی کوتاه و طبیعی باشد.\n\nحافظه گفتگو:\n"+memory.context();}
 
     private JSONArray tools()throws Exception{
         JSONArray t=new JSONArray();
@@ -77,12 +78,17 @@ public class AgentCore {
         t.put(fn("open_camera","باز کردن دوربین",emptyProps(),new String[]{}));
         t.put(fn("share_text","باز کردن پنل اشتراک متن",props(new String[][]{{"text","string","متن برای اشتراک"}}),new String[]{"text"}));
         t.put(fn("pc_command","ارسال فرمان به JARVIS روی کامپیوتر متصل",props(new String[][]{{"command","string","فرمان برای PC"}}),new String[]{"command"}));
+        t.put(fn("connected_services_status","بررسی زنده اتصال Backend، Gmail و Google Calendar",emptyProps(),new String[]{}));
+        t.put(fn("google_gmail_search","جستجو و خواندن خلاصه ایمیل‌های Gmail متصل",props(new String[][]{{"query","string","Gmail search query یا عبارت جستجو"},{"max_results","integer","حداکثر تعداد نتیجه"}}),new String[]{"query","max_results"}));
+        t.put(fn("google_gmail_draft","ساخت Draft در Gmail؛ این ابزار ایمیل را Send نمی‌کند",props(new String[][]{{"to","string","آدرس دقیق گیرنده"},{"subject","string","موضوع"},{"body","string","متن Draft"}}),new String[]{"to","subject","body"}));
+        t.put(fn("google_calendar_upcoming","خواندن رویدادهای آینده Google Calendar",props(new String[][]{{"max_results","integer","حداکثر تعداد رویداد"}}),new String[]{"max_results"}));
+        t.put(fn("google_calendar_create","ثبت مستقیم رویداد در Google Calendar متصل",props(new String[][]{{"title","string","عنوان"},{"time_text","string","زمان فارسی مثل فردا ساعت 10"},{"duration_minutes","integer","مدت دقیقه"},{"location","string","مکان"},{"description","string","توضیح"}}),new String[]{"title","time_text","duration_minutes","location","description"}));
         t.put(fn("system_health","گزارش وضعیت مجوزها و سرویس‌های JARVIS",emptyProps(),new String[]{}));
         t.put(fn("create_reminder","ثبت یادآوری با epoch دقیق",props(new String[][]{{"title","string","متن یادآوری"},{"epoch_ms","integer","زمان اجرا"}}),new String[]{"title","epoch_ms"}));
         t.put(fn("create_reminder_fa","ثبت یادآوری با عبارت زمان فارسی",props(new String[][]{{"title","string","متن یادآوری"},{"time_text","string","مثال: فردا ساعت 8"}}),new String[]{"title","time_text"}));
         t.put(fn("list_reminders","نمایش یادآوری‌ها",emptyProps(),new String[]{}));
         t.put(fn("cancel_reminder","حذف یادآوری",props(new String[][]{{"id","integer","شناسه"}}),new String[]{"id"}));
-        t.put(fn("create_calendar_event","باز کردن فرم رویداد تقویم",props(new String[][]{{"title","string","عنوان"},{"time_text","string","زمان فارسی"},{"duration_minutes","integer","مدت دقیقه"},{"location","string","مکان"},{"description","string","توضیح"}}),new String[]{"title","time_text","duration_minutes","location","description"}));
+        t.put(fn("create_calendar_event","باز کردن فرم رویداد تقویم سیستم؛ ثبت نهایی توسط کاربر/اپ تقویم",props(new String[][]{{"title","string","عنوان"},{"time_text","string","زمان فارسی"},{"duration_minutes","integer","مدت دقیقه"},{"location","string","مکان"},{"description","string","توضیح"}}),new String[]{"title","time_text","duration_minutes","location","description"}));
         t.put(fn("remember_fact","ذخیره واقعیت در حافظه",props(new String[][]{{"fact","string","واقعیت"}}),new String[]{"fact"}));
         return t;
     }
@@ -103,12 +109,17 @@ public class AgentCore {
         case "open_camera":return ui(work::openCamera)?"دوربین باز شد.":"دوربین باز نشد.";
         case "share_text":return ui(()->work.shareText(a.optString("text")))?"پنل اشتراک باز شد.":"اشتراک باز نشد.";
         case "pc_command":return pc.send(a.optString("command"));
+        case "connected_services_status":{ConnectedServices.Status s=connected.status();return "Backend: "+(s.backendReady?"READY":"NOT READY")+"\nGoogle OAuth: "+(s.googleConnected?"CONNECTED":s.googleConfigured?"READY TO CONNECT":"NOT CONFIGURED")+"\nGmail: "+(s.gmail?"CONNECTED":"NOT CONNECTED")+"\nCalendar: "+(s.calendar?"CONNECTED":"NOT CONNECTED")+"\n"+s.detail;}
+        case "google_gmail_search":return connected.gmailSearch(a.optString("query"),a.optInt("max_results",8));
+        case "google_gmail_draft":return connected.gmailDraft(a.optString("to"),a.optString("subject"),a.optString("body"));
+        case "google_calendar_upcoming":return connected.calendarUpcoming(a.optInt("max_results",10));
+        case "google_calendar_create":{PersianTimeParser.Result r=timeParser.parse(a.optString("time_text"));if(!r.ok)return "زمان رویداد را تشخیص ندادم.";return connected.calendarCreate(a.optString("title","رویداد JARVIS"),r.epochMs,a.optInt("duration_minutes",60),a.optString("location"),a.optString("description"));}
         case "system_health":return health.report()+"\n"+prod.status()+"\nPC Bridge: "+(pc.configured()?"READY":"NOT CONFIGURED");
         case "create_reminder":{long at=a.optLong("epoch_ms",0);String title=a.optString("title","یادآوری جارویس");if(at<=System.currentTimeMillis())return "زمان معتبر نیست.";return reminders.schedule(title,at)?"یادآوری ثبت شد.":"ثبت یادآوری شکست خورد.";}
         case "create_reminder_fa":{PersianTimeParser.Result r=timeParser.parse(a.optString("time_text"));if(!r.ok)return "زمان فارسی را تشخیص ندادم.";return reminders.schedule(a.optString("title","یادآوری جارویس"),r.epochMs)?"یادآوری ثبت شد.":"ثبت یادآوری شکست خورد.";}
         case "list_reminders":return reminders.summary();
         case "cancel_reminder":return reminders.cancel(a.optInt("id",-1))?"یادآوری حذف شد.":"یادآوری پیدا نشد.";
-        case "create_calendar_event":{PersianTimeParser.Result r=timeParser.parse(a.optString("time_text"));if(!r.ok)return "زمان رویداد را تشخیص ندادم.";long end=r.epochMs+Math.max(1,a.optInt("duration_minutes",60))*60000L;return ui(()->personal.insertCalendarEvent(a.optString("title","رویداد JARVIS"),r.epochMs,end,a.optString("location"),a.optString("description")))?"فرم تقویم باز شد.":"تقویم باز نشد.";}
+        case "create_calendar_event":{PersianTimeParser.Result r=timeParser.parse(a.optString("time_text"));if(!r.ok)return "زمان رویداد را تشخیص ندادم.";long end=r.epochMs+Math.max(1,a.optInt("duration_minutes",60))*60000L;return ui(()->personal.insertCalendarEvent(a.optString("title","رویداد JARVIS"),r.epochMs,end,a.optString("location"),a.optString("description")))?"فرم تقویم باز شد؛ ثبت نهایی هنوز Handoff به اپ تقویم است.":"تقویم باز نشد.";}
         case "remember_fact":{String f=a.optString("fact").trim();if(f.isEmpty())return "چیزی برای ذخیره نبود.";memory.remember(f);return "در حافظه ذخیره شد.";}
         default:return "ابزار ناشناخته و اجرا نشد.";
     }}catch(Exception e){return "اجرای ابزار خطا داد: "+e.getClass().getSimpleName();}}
