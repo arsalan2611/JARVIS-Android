@@ -18,7 +18,7 @@
         <intent><action android:name="android.intent.action.TTS_SERVICE"/></intent>
     </queries>
     <application android:allowBackup="false" android:label="JARVIS فارسی" android:theme="@style/AppTheme" android:usesCleartextTraffic="false">
-        <activity android:name=".MainActivity" android:screenOrientation="portrait" android:exported="true">
+        <activity android:name=".MainActivity" android:screenOrientation="portrait" android:launchMode="singleTop" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>
         <receiver android:name=".ReminderReceiver" android:exported="false"/>
@@ -30,6 +30,6 @@
             <meta-data android:name="android.voice_interaction" android:resource="@xml/voice_interaction_service"/>
             <intent-filter><action android:name="android.service.voice.VoiceInteractionService"/></intent-filter>
         </service>
-        <service android:name=".JarvisVoiceSessionService" android:permission="android.permission.BIND_VOICE_INTERACTION" android:exported="true"/>
+        <service android:name=".JarvisVoiceSessionService" android:permission="android.permission.BIND_VOICE_INTERACTION" android:process=":voice_session" android:exported="true"/>
     </application>
 </manifest>
