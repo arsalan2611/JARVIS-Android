@@ -13,6 +13,7 @@ import java.util.concurrent.*;
 
 public class VisionEngine {
     public interface Callback { void onResult(String text); }
+    public interface AgentCallback { void onResult(VisionAgentResult result); }
     private static final String OPENAI_ENDPOINT="https://api.openai.com/v1/responses";
     private static final String MODEL="gpt-5.6-luna";
     private final ExecutorService ex=Executors.newSingleThreadExecutor();
@@ -22,15 +23,25 @@ public class VisionEngine {
     public VisionEngine(Context c){secrets=new SecureStore(c);prod=new ProductionConfig(c);}
 
     public void analyze(Bitmap bitmap,String question,Callback cb){
-        if(bitmap==null){cb.onResult("اول یک تصویر از دوربین یا گالری انتخاب کن.");return;}
+        analyzeAgent(bitmap,question,r->cb.onResult(r.display()));
+    }
+
+    public void analyzeAgent(Bitmap bitmap,String question,AgentCallback cb){
+        if(bitmap==null){cb.onResult(errorResult("اول یک تصویر از دوربین یا گالری انتخاب کن."));return;}
         String token=prod.productionMode()?prod.backendToken():secrets.get("openai_key");
-        if(token.isEmpty()){cb.onResult(prod.productionMode()?"Backend امن برای Vision تنظیم نشده است.":"برای Vision ابتدا OpenAI یا Backend امن را تنظیم کن.");return;}
+        if(token.isEmpty()){cb.onResult(errorResult(prod.productionMode()?"Backend امن برای Vision تنظیم نشده است.":"برای Vision ابتدا OpenAI یا Backend امن را تنظیم کن."));return;}
         ex.submit(()->{
-            String result;
-            try{result=call(bitmap,question==null||question.trim().isEmpty()?"این تصویر را دقیق بررسی کن و مهم‌ترین نکاتش را به فارسی توضیح بده.":question.trim(),token);}catch(Exception e){result=pretty(e.getMessage());}
-            final String out=result;new Handler(Looper.getMainLooper()).post(()->cb.onResult(out));
+            VisionAgentResult result;
+            try{
+                String q=question==null||question.trim().isEmpty()?"این تصویر را بررسی کن، اطلاعات مهم را استخراج کن و اگر اقدام مفیدی وجود دارد پیشنهاد بده.":question.trim();
+                String raw=call(bitmap,q,token);
+                result=VisionAgentResult.fromJson(raw);
+            }catch(Exception e){result=errorResult(pretty(e.getMessage()));}
+            final VisionAgentResult out=result;new Handler(Looper.getMainLooper()).post(()->cb.onResult(out));
         });
     }
+
+    private VisionAgentResult errorResult(String text){VisionAgentResult r=new VisionAgentResult();r.summary=text;r.confidence=0;r.suggestedAction="none";return r;}
 
     private String call(Bitmap source,String q,String token)throws Exception{
         Bitmap b=scale(source,1280);
@@ -40,11 +51,12 @@ public class VisionEngine {
         content.put(new JSONObject().put("type","input_text").put("text",q));
         content.put(new JSONObject().put("type","input_image").put("image_url",data).put("detail","auto"));
         JSONArray input=new JSONArray().put(new JSONObject().put("role","user").put("content",content));
-        JSONObject body=new JSONObject().put("model",MODEL).put("instructions","تو JARVIS Vision هستی. تصویر را دقیق تحلیل کن، فقط چیزهایی را بگو که واقعاً از تصویر قابل استنباط است، اگر مطمئن نیستی صریح بگو. پاسخ را فارسی، کاربردی و نسبتاً کوتاه بده.").put("input",input);
+        String instructions="تو JARVIS Vision Agent هستی. تصویر را دقیق تحلیل کن و فقط اطلاعات قابل استنباط را گزارش کن. خروجی باید فقط یک JSON معتبر و بدون markdown باشد با کلیدهای: summary, extracted_text, entity_type, confidence, suggested_action, action_payload, rationale. confidence عدد 0 تا 100 است. suggested_action فقط یکی از none, web_search, maps, reminder, calendar, email, save_memory باشد. اگر اطلاعات کافی نیست none بگذار. برای reminder payload باید JSON با title و time_text باشد. برای calendar payload باید title,time_text,duration_minutes,location,description باشد. برای web_search/maps payload باید query باشد. برای email payload باید to,subject,body باشد. برای save_memory payload باید key,value باشد. هرگز اقدام خطرناک یا غیرقابل برگشت پیشنهاد نده. متن پاسخ‌ها فارسی باشد ولی نام actionها دقیقاً انگلیسی بماند.";
+        JSONObject body=new JSONObject().put("model",MODEL).put("instructions",instructions).put("input",input);
         HttpURLConnection c=(HttpURLConnection)new URL(endpoint()).openConnection();c.setRequestMethod("POST");c.setConnectTimeout(20000);c.setReadTimeout(90000);c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json; charset=utf-8");c.setRequestProperty("Authorization","Bearer "+token);
         try(OutputStream os=c.getOutputStream()){os.write(body.toString().getBytes(StandardCharsets.UTF_8));}
         int code=c.getResponseCode();String txt=read(code>=200&&code<300?c.getInputStream():c.getErrorStream());if(code<200||code>=300)throw new IOException("HTTP "+code+" "+txt);
-        String t=parseText(new JSONObject(txt));return t.isEmpty()?"تحلیل تصویری پاسخی برنگرداند.":t;
+        String t=parseText(new JSONObject(txt));return t.isEmpty()?"{\"summary\":\"تحلیل تصویری پاسخی برنگرداند.\",\"extracted_text\":\"\",\"entity_type\":\"unknown\",\"confidence\":0,\"suggested_action\":\"none\",\"action_payload\":{},\"rationale\":\"\"}":t;
     }
 
     private Bitmap scale(Bitmap src,int max){int w=src.getWidth(),h=src.getHeight();if(w<=max&&h<=max)return src;float r=Math.min((float)max/w,(float)max/h);return Bitmap.createScaledBitmap(src,Math.max(1,Math.round(w*r)),Math.max(1,Math.round(h*r)),true);}
