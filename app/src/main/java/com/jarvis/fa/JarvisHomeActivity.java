@@ -15,7 +15,7 @@ import android.widget.*;
 public class JarvisHomeActivity extends Activity {
     private static final int REQ_ASSISTANT_ROLE=9101;
     private final int bg=Color.rgb(2,8,16),panel=Color.rgb(7,20,34),panel2=Color.rgb(9,27,45),accent=Color.rgb(56,225,255),text=Color.WHITE,muted=Color.rgb(145,177,198),good=Color.rgb(107,235,181);
-    private TextView assistant,backend,pc,today,lastAction;
+    private TextView assistant,backend,pc,today,lastAction,readiness;
     private ReminderEngine reminders; private ProductionConfig prod; private PcBridge bridge; private HotwordCoordinator hotword; private ActionReceiptStore receipts;
 
     @Override public void onCreate(Bundle b){super.onCreate(b);reminders=new ReminderEngine(this);prod=new ProductionConfig(this);bridge=new PcBridge(this);hotword=new HotwordCoordinator(this);receipts=new ActionReceiptStore(this);build();}
@@ -33,13 +33,14 @@ public class JarvisHomeActivity extends Activity {
 
         LinearLayout head=new LinearLayout(this);head.setGravity(Gravity.CENTER_VERTICAL);head.setOrientation(LinearLayout.HORIZONTAL);
         TextView title=tv("J A R V I S",28);title.setTextColor(accent);title.setLetterSpacing(.14f);head.addView(title,new LinearLayout.LayoutParams(0,-2,1));
-        TextView ver=tv("BUILD 29",11);ver.setTextColor(muted);head.addView(ver);root.addView(head);
-        TextView sub=tv("VOICE • SECURITY • FILE INTELLIGENCE",11);sub.setTextColor(muted);root.addView(sub);
+        TextView ver=tv("BUILD 30",11);ver.setTextColor(muted);head.addView(ver);root.addView(head);
+        TextView sub=tv("DAILY DRIVER • VOICE • VISION • FILES • SECURITY",11);sub.setTextColor(muted);root.addView(sub);
 
         LinearLayout core=card();core.setGravity(Gravity.CENTER);
         PulseView pulse=new PulseView();core.addView(pulse,new LinearLayout.LayoutParams(-1,dp(250)));
         TextView ready=tv("ONLINE • آماده فرمان",14);ready.setTextColor(accent);ready.setGravity(Gravity.CENTER);core.addView(ready);
         assistant=tv("",12);assistant.setGravity(Gravity.CENTER);assistant.setTextColor(muted);core.addView(assistant);
+        readiness=tv("",11);readiness.setGravity(Gravity.CENTER);readiness.setTextColor(muted);core.addView(readiness);
         Button speak=btn("◉  صحبت فارسی با JARVIS");speak.setTextColor(Color.rgb(0,20,28));speak.setBackground(shape(accent,28));speak.setOnClickListener(v->startActivity(new Intent(this,JarvisVoiceActivity.class)));core.addView(speak,new LinearLayout.LayoutParams(-1,dp(58)));
         root.addView(core);
 
@@ -51,21 +52,22 @@ public class JarvisHomeActivity extends Activity {
 
         LinearLayout q2=new LinearLayout(this);
         Button health=btn("✓ Health");health.setOnClickListener(v->startActivity(new Intent(this,DiagnosticsActivity.class)));q2.addView(health,new LinearLayout.LayoutParams(0,dp(50),1));
-        Button history=btn("≡ Actions");history.setOnClickListener(v->startActivity(new Intent(this,ActionHistoryActivity.class)));q2.addView(history,new LinearLayout.LayoutParams(0,dp(50),1));
-        Button refresh=btn("↻ Refresh");refresh.setOnClickListener(v->refresh());q2.addView(refresh,new LinearLayout.LayoutParams(0,dp(50),1));root.addView(q2);
+        Button security=btn("⌾ Security");security.setOnClickListener(v->startActivity(new Intent(this,SecurityCenterActivity.class)));q2.addView(security,new LinearLayout.LayoutParams(0,dp(50),1));
+        Button history=btn("≡ Actions");history.setOnClickListener(v->startActivity(new Intent(this,ActionHistoryActivity.class)));q2.addView(history,new LinearLayout.LayoutParams(0,dp(50),1));root.addView(q2);
 
         LinearLayout todayCard=card();TextView tt=tv("TODAY // MISSION QUEUE",12);tt.setTextColor(accent);todayCard.addView(tt);today=tv("",14);todayCard.addView(today);Button plan=btn("✦ تحلیل برنامه امروز در Console");plan.setOnClickListener(v->{Intent i=new Intent(this,MainActivity.class);i.putExtra("prefill_command","برنامه و یادآوری‌های امروز من را بررسی کن و مهم‌ترین اولویت‌ها را کوتاه بگو");startActivity(i);});todayCard.addView(plan,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(todayCard);
 
-        LinearLayout statusCard=card();TextView st=tv("SYSTEM & PRIVACY",12);st.setTextColor(accent);statusCard.addView(st);backend=tv("",13);pc=tv("",13);statusCard.addView(backend);statusCard.addView(pc);Button assist=btn("◇ درخواست نقش دستیار اصلی گوشی");assist.setOnClickListener(v->requestAssistantRole());statusCard.addView(assist,new LinearLayout.LayoutParams(-1,dp(48)));TextView privacy=tv("کلیدها در Android Keystore رمزگذاری می‌شوند. برای گفتار می‌توانی بین Accuracy و Private/Local انتخاب کنی.",11);privacy.setTextColor(muted);statusCard.addView(privacy);root.addView(statusCard);
+        LinearLayout statusCard=card();TextView st=tv("SYSTEM LINK",12);st.setTextColor(accent);statusCard.addView(st);backend=tv("",13);pc=tv("",13);statusCard.addView(backend);statusCard.addView(pc);Button assist=btn("◇ انتخاب JARVIS به‌عنوان دستیار اصلی گوشی");assist.setOnClickListener(v->requestAssistantRole());statusCard.addView(assist,new LinearLayout.LayoutParams(-1,dp(48)));Button check=btn("بررسی دقیق Assistant Readiness");check.setOnClickListener(v->showReadiness());statusCard.addView(check,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(statusCard);
 
         LinearLayout receiptCard=card();TextView rt=tv("LAST ACTION RECEIPT",12);rt.setTextColor(accent);receiptCard.addView(rt);lastAction=tv("",13);lastAction.setTextColor(muted);receiptCard.addView(lastAction);root.addView(receiptCard);
 
-        TextView foot=tv("JARVIS • PRIVATE BY DESIGN • LOCAL CONTROL",10);foot.setTextColor(Color.rgb(80,118,139));foot.setGravity(Gravity.CENTER);root.addView(foot);
+        TextView foot=tv("JARVIS • PRIVATE BY DESIGN • USER-CONTROLLED",10);foot.setTextColor(Color.rgb(80,118,139));foot.setGravity(Gravity.CENTER);root.addView(foot);
         sc.addView(root);setContentView(sc);
     }
 
     private void refresh(){
         boolean active=hotword.isSystemAssistant();assistant.setText(active?"SYSTEM ASSISTANT • ACTIVE":"SYSTEM ASSISTANT • "+hotword.status());assistant.setTextColor(active?good:muted);
+        AssistantReadiness.Report ar=new AssistantReadiness(this).inspect();readiness.setText("ASSISTANT READINESS • "+ar.score+"/100");readiness.setTextColor(ar.score>=80?good:muted);
         String r=reminders.summary();today.setText(r==null||r.trim().isEmpty()?"یادآوری فعالی ثبت نشده است.":r);
         backend.setText("Backend  •  "+(prod.productionMode()?"PRODUCTION":"DEVELOPMENT")+"  •  "+(prod.backendUrl().isEmpty()?"Not configured":"Configured"));
         backend.setTextColor(prod.productionMode()&&!prod.backendUrl().isEmpty()?good:muted);
@@ -73,6 +75,7 @@ public class JarvisHomeActivity extends Activity {
         lastAction.setText(receipts.latest());
     }
     private void openConsole(boolean listen){Intent i=new Intent(this,MainActivity.class);if(listen)i.putExtra("auto_listen",true);startActivity(i);}
+    private void showReadiness(){AssistantReadiness.Report r=new AssistantReadiness(this).inspect();new AlertDialog.Builder(this).setTitle("JARVIS Assistant Readiness").setMessage(r.text).setPositiveButton("باشه",null).show();}
     private void requestAssistantRole(){
         if(Build.VERSION.SDK_INT>=29){
             try{
