@@ -1,0 +1,59 @@
+name: JARVIS Integration Smoke
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - 'pc-bridge/**'
+      - 'railway.json'
+      - 'render.yaml'
+      - '.github/workflows/integration-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Python syntax check
+        run: |
+          python -m py_compile backend/jarvis_backend.py
+          python -m py_compile pc-bridge/jarvis_pc_bridge.py
+      - name: Backend health smoke
+        env:
+          JARVIS_BACKEND_TOKEN: test-token
+          OPENAI_API_KEY: test-placeholder
+          JARVIS_BACKEND_HOST: 127.0.0.1
+          JARVIS_BACKEND_PORT: '18080'
+        run: |
+          python backend/jarvis_backend.py > /tmp/jarvis-backend.log 2>&1 &
+          PID=$!
+          sleep 2
+          python - <<'PY'
+          import json, urllib.request
+          with urllib.request.urlopen('http://127.0.0.1:18080/health', timeout=5) as r:
+              data=json.loads(r.read().decode())
+              assert r.status == 200 and data['ok'] is True
+          PY
+          kill $PID
+      - name: PC Bridge health smoke
+        env:
+          JARVIS_PC_TOKEN: test-token
+          JARVIS_PC_HOST: 127.0.0.1
+          JARVIS_PC_PORT: '18765'
+        run: |
+          python pc-bridge/jarvis_pc_bridge.py > /tmp/jarvis-pc.log 2>&1 &
+          PID=$!
+          sleep 2
+          python - <<'PY'
+          import json, urllib.request
+          with urllib.request.urlopen('http://127.0.0.1:18765/health', timeout=5) as r:
+              data=json.loads(r.read().decode())
+              assert r.status == 200 and data['ok'] is True
+          PY
+          kill $PID
+      - name: Docker build
+        run: docker build -f backend/Dockerfile -t jarvis-backend:smoke .
