@@ -1,0 +1,26 @@
+package com.jarvis.fa;
+
+import android.app.*;
+import android.content.*;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.*;
+import android.widget.*;
+import java.util.concurrent.*;
+
+public class FileIntelligenceActivity extends Activity {
+    private static final int REQ_FILE=7101;
+    private final int bg=Color.rgb(2,8,16),panel=Color.rgb(7,20,34),accent=Color.rgb(56,225,255),text=Color.WHITE,muted=Color.rgb(145,177,198);
+    private TextView status,summary;private EditText question;private Button analyzeBtn,askBtn;private FileIntelligenceEngine.Result current;private final ExecutorService ex=Executors.newSingleThreadExecutor();private AgentCore agent;
+
+    @Override public void onCreate(Bundle b){super.onCreate(b);agent=new AgentCore(this);build();pick();}
+    @Override protected void onDestroy(){super.onDestroy();ex.shutdownNow();if(agent!=null)agent.shutdown();}
+    private int dp(int v){return(int)(v*getResources().getDisplayMetrics().density+.5f);}private GradientDrawable shape(int c,int r){GradientDrawable g=new GradientDrawable();g.setColor(c);g.setCornerRadius(dp(r));g.setStroke(dp(1),Color.rgb(17,67,91));return g;}private TextView tv(String s,int z){TextView v=new TextView(this);v.setText(s);v.setTextColor(text);v.setTextSize(z);v.setPadding(dp(12),dp(9),dp(12),dp(9));return v;}private Button btn(String s){Button b=new Button(this);b.setText(s);b.setAllCaps(false);b.setTextColor(text);b.setBackground(shape(panel,18));return b;}
+    private void build(){ScrollView sc=new ScrollView(this);LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(16),dp(20),dp(16),dp(28));root.setBackgroundColor(bg);root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);TextView title=tv("JARVIS FILE INTELLIGENCE",24);title.setTextColor(accent);root.addView(title);status=tv("یک فایل انتخاب کن تا JARVIS آن را بخواند.",13);status.setTextColor(muted);root.addView(status);analyzeBtn=btn("▣ انتخاب فایل");analyzeBtn.setOnClickListener(v->pick());root.addView(analyzeBtn,new LinearLayout.LayoutParams(-1,dp(52)));summary=tv("",14);summary.setBackground(shape(panel,20));root.addView(summary,new LinearLayout.LayoutParams(-1,-2));question=new EditText(this);question.setHint("مثلاً: اقلام با بیشترین مبلغ را پیدا کن، یا این فایل درباره چیست؟");question.setHintTextColor(muted);question.setTextColor(text);question.setBackground(shape(panel,18));root.addView(question,new LinearLayout.LayoutParams(-1,dp(100)));askBtn=btn("✦ تحلیل با JARVIS");askBtn.setEnabled(false);askBtn.setOnClickListener(v->ask());root.addView(askBtn,new LinearLayout.LayoutParams(-1,dp(54)));Button vision=btn("◈ باز کردن JARVIS Vision برای PDF/تصویر");vision.setOnClickListener(v->startActivity(new Intent(this,VisionActivity.class)));root.addView(vision,new LinearLayout.LayoutParams(-1,dp(50)));sc.addView(root);setContentView(sc);}
+    private void pick(){Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");i.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","text/csv","text/plain","application/json","application/xml","application/pdf"});startActivityForResult(i,REQ_FILE);}
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode!=REQ_FILE||resultCode!=RESULT_OK||data==null||data.getData()==null)return;Uri uri=data.getData();try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}status.setText("در حال خواندن فایل…");askBtn.setEnabled(false);ex.submit(()->{FileIntelligenceEngine.Result r=new FileIntelligenceEngine(this).analyze(uri);runOnUiThread(()->showResult(r));});}
+    private void showResult(FileIntelligenceEngine.Result r){current=r;if(r.ok){status.setText("FILE READY • "+r.name);status.setTextColor(accent);summary.setText(r.summary);askBtn.setEnabled(true);new ActionReceiptStore(this).record("تحلیل فایل "+r.name,"فایل خوانده و آماده تحلیل شد.");}else{status.setText("FILE NOT READY • "+r.name);status.setTextColor(muted);summary.setText(r.error);askBtn.setEnabled(false);}}
+    private void ask(){if(current==null||!current.ok)return;String q=question.getText().toString().trim();if(q.isEmpty())q="این فایل را تحلیل کن، نکات مهم، الگوها، موارد غیرعادی و اقدامات پیشنهادی را کوتاه و دقیق بگو.";askBtn.setEnabled(false);status.setText("JARVIS در حال تحلیل داده…");String prompt="[فایل: "+current.name+"]\n[نوع: "+current.type+"]\n[داده استخراج‌شده]\n"+current.extracted+"\n\n[درخواست]\n"+q;agent.run(prompt,out->{summary.setText(out);status.setText("ANALYSIS COMPLETE");status.setTextColor(accent);askBtn.setEnabled(true);new ActionReceiptStore(this).record("تحلیل هوشمند "+current.name,out);});}
+}
