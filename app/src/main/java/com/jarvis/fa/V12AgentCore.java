@@ -81,12 +81,11 @@ public class V12AgentCore {
             return;
         }
 
-        if(n.contains("فایل")||n.contains("پی دی اف")||n.contains("pdf")||n.contains("اکسل")||n.contains("excel")){
+        if(n.contains("فایل")||n.contains("پی دی اف")||n.contains("pdf")||n.contains("اکسل")||n.contains("excel")||n.contains("csv")){
             state(VoiceStateMachine.State.EXECUTING);
-            String mime=n.contains("پی دی اف")||n.contains("pdf")?"application/pdf":(n.contains("اکسل")||n.contains("excel")?"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"*/*");
             activity.runOnUiThread(()->{
-                boolean ok=work.openFiles(mime);
-                finish(q,ok?"انتخاب‌گر فایل را باز کردم.":"باز کردن فایل‌ها ممکن نشد.",cb);
+                try{activity.startActivity(new Intent(activity,FileIntelligenceActivity.class));finish(q,"JARVIS File Intelligence را باز کردم.",cb);}
+                catch(Exception e){new DiagnosticStore(activity).error("OPEN_FILE_INTELLIGENCE",e);finish(q,"باز کردن File Intelligence ممکن نشد.",cb);}
             });
             return;
         }
