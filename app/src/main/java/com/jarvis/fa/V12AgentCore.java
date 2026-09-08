@@ -11,6 +11,7 @@ public class V12AgentCore {
     private final AgentCore delegate;
     private final StructuredMemory structured;
     private final WorkTools work;
+    private final SelfTestEngine selfTest;
     private volatile StateCallback stateCallback;
 
     public V12AgentCore(Activity a){
@@ -18,6 +19,7 @@ public class V12AgentCore {
         delegate=new AgentCore(a);
         structured=new StructuredMemory(a);
         work=new WorkTools(a);
+        selfTest=new SelfTestEngine(a);
         delegate.setStateCallback(s->{StateCallback cb=stateCallback;if(cb!=null)cb.onState(s);});
     }
 
@@ -27,6 +29,12 @@ public class V12AgentCore {
         String q=raw==null?"":raw.trim();
         if(q.isEmpty()){cb.onResult("فرمانی دریافت نشد.");return;}
         String n=normalize(q);
+
+        if(n.contains("سلامت سیستم")||n.contains("وضعیت سلامت")||n.contains("self test")||n.contains("self-test")||n.equals("health")||n.contains("تست کامل سیستم")){
+            state(VoiceStateMachine.State.EXECUTING);
+            selfTest.run(r->{state(VoiceStateMachine.State.IDLE);cb.onResult(r);});
+            return;
+        }
 
         if(n.startsWith("یادت باشه")||n.startsWith("یادت باشد")||n.startsWith("به خاطر بسپار")){
             String v=q.replaceFirst("^(یادت باشه|یادت باشد|به خاطر بسپار)\\s*","").trim();
@@ -66,7 +74,7 @@ public class V12AgentCore {
     }
 
     public String memoryContext(){return structured.context();}
-    public void shutdown(){delegate.shutdown();}
+    public void shutdown(){selfTest.shutdown();delegate.shutdown();}
 
     private void state(VoiceStateMachine.State s){StateCallback cb=stateCallback;if(cb!=null)activity.runOnUiThread(()->cb.onState(s));}
     private String normalize(String s){return s.toLowerCase(Locale.ROOT).replace('ي','ی').replace('ك','ک').replace('‌',' ').replaceAll("\\s+"," ").trim();}
