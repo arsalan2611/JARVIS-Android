@@ -1,7 +1,6 @@
 package com.jarvis.fa;
 
 import android.content.*;
-import android.os.Build;
 import android.os.Bundle;
 import android.service.voice.VoiceInteractionService;
 
@@ -13,7 +12,6 @@ public class JarvisVoiceInteractionService extends VoiceInteractionService {
             .putString("assistantMode","SYSTEM_ASSISTANT")
             .apply();
         new HotwordCoordinator(this).reconcile();
-        if(Build.VERSION.SDK_INT>=35){try{setInvocationEffectEnabled(true);}catch(Throwable ignored){}}
     }
     @Override public void onPrepareToShowSession(Bundle args,int flags){
         super.onPrepareToShowSession(args,flags);
