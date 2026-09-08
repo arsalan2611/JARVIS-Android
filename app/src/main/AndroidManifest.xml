@@ -28,6 +28,7 @@
         <activity android:name=".VisionActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".DiagnosticsActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".ActionHistoryActivity" android:screenOrientation="portrait" android:exported="false"/>
+        <activity android:name=".FileIntelligenceActivity" android:screenOrientation="portrait" android:exported="false"/>
         <receiver android:name=".ReminderReceiver" android:exported="false"/>
         <receiver android:name=".BootReceiver" android:enabled="true" android:exported="true">
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter>
