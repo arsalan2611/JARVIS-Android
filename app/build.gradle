@@ -10,8 +10,8 @@ android {
         applicationId "com.jarvis.fa"
         minSdk 26
         targetSdk 35
-        versionCode 8
-        versionName "8.0-agent-core"
+        versionCode 9
+        versionName "9.0-system-assistant"
     }
 
     buildTypes {
