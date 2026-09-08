@@ -25,6 +25,6 @@ public class DiagnosticsActivity extends Activity {
     void runTest(){status.setText("DIAGNOSTICS • در حال تست...");store.info("SELFTEST","Started from diagnostics");selfTest.run(r->{store.info("SELFTEST",r);report.setText(r+"\n\n"+store.report());status.setText("DIAGNOSTICS • تست کامل شد");});}
     void refresh(){report.setText(store.report());}
     void copy(){ClipboardManager c=(ClipboardManager)getSystemService(CLIPBOARD_SERVICE);c.setPrimaryClip(ClipData.newPlainText("JARVIS Diagnostic Report",report.getText()));status.setText("DIAGNOSTICS • گزارش کپی شد");}
-    void share(){try{Intent i=new Intent(Intent.ACTION_SEND);i.setType("text/plain");i.putExtra(Intent.EXTRA_SUBJECT,"JARVIS Diagnostic Report");i.putExtra(Intent.EXTRA_TEXT",report.getText().toString());startActivity(Intent.createChooser(i,"اشتراک گزارش JARVIS"));}catch(Exception e){store.error("SHARE",e);status.setText("اشتراک گزارش ممکن نشد");}}
+    void share(){try{Intent i=new Intent(Intent.ACTION_SEND);i.setType("text/plain");i.putExtra(Intent.EXTRA_SUBJECT,"JARVIS Diagnostic Report");i.putExtra(Intent.EXTRA_TEXT,report.getText().toString());startActivity(Intent.createChooser(i,"اشتراک گزارش JARVIS"));}catch(Exception e){store.error("SHARE",e);status.setText("اشتراک گزارش ممکن نشد");}}
     @Override protected void onDestroy(){super.onDestroy();selfTest.shutdown();}
 }
