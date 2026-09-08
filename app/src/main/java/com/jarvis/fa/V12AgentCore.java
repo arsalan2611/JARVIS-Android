@@ -1,6 +1,7 @@
 package com.jarvis.fa;
 
 import android.app.Activity;
+import android.content.Intent;
 import java.util.Locale;
 
 public class V12AgentCore {
@@ -29,6 +30,15 @@ public class V12AgentCore {
         String q=raw==null?"":raw.trim();
         if(q.isEmpty()){cb.onResult("فرمانی دریافت نشد.");return;}
         String n=normalize(q);
+
+        if(n.contains("ویژن")||n.contains("vision")||n.startsWith("دوربین را باز کن")||n.startsWith("دوربین رو باز کن")){
+            state(VoiceStateMachine.State.EXECUTING);
+            activity.runOnUiThread(()->{
+                try{activity.startActivity(new Intent(activity,VisionActivity.class));cb.onResult("JARVIS Vision را باز کردم.");}
+                catch(Exception e){cb.onResult("باز کردن JARVIS Vision ممکن نشد.");}
+            });
+            return;
+        }
 
         if(n.contains("سلامت سیستم")||n.contains("وضعیت سلامت")||n.contains("self test")||n.contains("self-test")||n.equals("health")||n.contains("تست کامل سیستم")){
             state(VoiceStateMachine.State.EXECUTING);
