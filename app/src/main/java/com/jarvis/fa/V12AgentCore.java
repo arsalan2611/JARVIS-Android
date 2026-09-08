@@ -31,18 +31,27 @@ public class V12AgentCore {
         if(q.isEmpty()){cb.onResult("فرمانی دریافت نشد.");return;}
         String n=normalize(q);
 
+        if(n.contains("گزارش خطا")||n.contains("دیاگنوستیک")||n.contains("diagnostic")||n.contains("لاگ سیستم")||n.contains("گزارش سیستم")){
+            state(VoiceStateMachine.State.EXECUTING);
+            activity.runOnUiThread(()->{
+                try{activity.startActivity(new Intent(activity,DiagnosticsActivity.class));cb.onResult("صفحه Diagnostics را باز کردم.");}
+                catch(Exception e){new DiagnosticStore(activity).error("OPEN_DIAGNOSTICS",e);cb.onResult("باز کردن Diagnostics ممکن نشد.");}
+            });
+            return;
+        }
+
         if(n.contains("ویژن")||n.contains("vision")||n.startsWith("دوربین را باز کن")||n.startsWith("دوربین رو باز کن")){
             state(VoiceStateMachine.State.EXECUTING);
             activity.runOnUiThread(()->{
                 try{activity.startActivity(new Intent(activity,VisionActivity.class));cb.onResult("JARVIS Vision را باز کردم.");}
-                catch(Exception e){cb.onResult("باز کردن JARVIS Vision ممکن نشد.");}
+                catch(Exception e){new DiagnosticStore(activity).error("OPEN_VISION",e);cb.onResult("باز کردن JARVIS Vision ممکن نشد.");}
             });
             return;
         }
 
         if(n.contains("سلامت سیستم")||n.contains("وضعیت سلامت")||n.contains("self test")||n.contains("self-test")||n.equals("health")||n.contains("تست کامل سیستم")){
             state(VoiceStateMachine.State.EXECUTING);
-            selfTest.run(r->{state(VoiceStateMachine.State.IDLE);cb.onResult(r);});
+            selfTest.run(r->{new DiagnosticStore(activity).info("SELFTEST",r);state(VoiceStateMachine.State.IDLE);cb.onResult(r);});
             return;
         }
 
