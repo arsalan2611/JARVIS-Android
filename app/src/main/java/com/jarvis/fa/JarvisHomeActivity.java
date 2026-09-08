@@ -56,7 +56,7 @@ public class JarvisHomeActivity extends Activity {
 
         LinearLayout statusCard=card();TextView st=tv("SYSTEM",12);st.setTextColor(accent);statusCard.addView(st);backend=tv("",13);pc=tv("",13);statusCard.addView(backend);statusCard.addView(pc);root.addView(statusCard);
 
-        LinearLayout receiptCard=card();TextView rt=tv("LAST ACTION",12);rt.setTextColor(accent);receiptCard.addView(rt);lastAction=tv("",13);lastAction.setTextColor(muted);receiptCard.addView(lastAction);Button history=btn("مشاهده سوابق در Console");history.setOnClickListener(v->{Intent i=new Intent(this,MainActivity.class);i.putExtra("prefill_command","سوابق آخرین اقدامات را نشان بده");startActivity(i);});receiptCard.addView(history,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(receiptCard);
+        LinearLayout receiptCard=card();TextView rt=tv("LAST ACTION",12);rt.setTextColor(accent);receiptCard.addView(rt);lastAction=tv("",13);lastAction.setTextColor(muted);receiptCard.addView(lastAction);Button history=btn("مشاهده سوابق اقدامات");history.setOnClickListener(v->startActivity(new Intent(this,ActionHistoryActivity.class)));receiptCard.addView(history,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(receiptCard);
 
         TextView foot=tv("JARVIS • PRIVATE BY DESIGN • LOCAL CONTROL",10);foot.setTextColor(Color.rgb(80,118,139));foot.setGravity(Gravity.CENTER);root.addView(foot);
         sc.addView(root);setContentView(sc);
