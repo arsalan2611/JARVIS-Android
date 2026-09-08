@@ -21,11 +21,13 @@
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
         </provider>
-        <activity android:name=".MainActivity" android:screenOrientation="portrait" android:launchMode="singleTop" android:exported="true">
+        <activity android:name=".JarvisHomeActivity" android:screenOrientation="portrait" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>
+        <activity android:name=".MainActivity" android:screenOrientation="portrait" android:launchMode="singleTop" android:exported="true"/>
         <activity android:name=".VisionActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".DiagnosticsActivity" android:screenOrientation="portrait" android:exported="false"/>
+        <activity android:name=".ActionHistoryActivity" android:screenOrientation="portrait" android:exported="false"/>
         <receiver android:name=".ReminderReceiver" android:exported="false"/>
         <receiver android:name=".BootReceiver" android:enabled="true" android:exported="true">
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter>
