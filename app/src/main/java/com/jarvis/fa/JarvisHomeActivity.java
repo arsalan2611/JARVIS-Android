@@ -1,6 +1,7 @@
 package com.jarvis.fa;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.animation.ValueAnimator;
 import android.app.role.RoleManager;
 import android.content.Intent;
@@ -55,7 +56,7 @@ public class JarvisHomeActivity extends Activity {
         Button security=btn("⌾ Security");security.setOnClickListener(v->startActivity(new Intent(this,SecurityCenterActivity.class)));q2.addView(security,new LinearLayout.LayoutParams(0,dp(50),1));
         Button history=btn("≡ Actions");history.setOnClickListener(v->startActivity(new Intent(this,ActionHistoryActivity.class)));q2.addView(history,new LinearLayout.LayoutParams(0,dp(50),1));root.addView(q2);
 
-        LinearLayout todayCard=card();TextView tt=tv("TODAY // MISSION QUEUE",12);tt.setTextColor(accent);todayCard.addView(tt);today=tv("",14);todayCard.addView(today);Button plan=btn("✦ تحلیل برنامه امروز در Console");plan.setOnClickListener(v->{Intent i=new Intent(this,MainActivity.class);i.putExtra("prefill_command","برنامه و یادآوری‌های امروز من را بررسی کن و مهم‌ترین اولویت‌ها را کوتاه بگو");startActivity(i);});todayCard.addView(plan,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(todayCard);
+        LinearLayout todayCard=card();TextView tt=tv("TODAY // MISSION QUEUE",12);tt.setTextColor(accent);todayCard.addView(tt);today=tv("",14);todayCard.addView(today);Button plan=btn("✦ تحلیل برنامه امروز در Console");plan.setOnClickListener(v->{String q="برنامه و یادآوری‌های امروز من را بررسی کن و مهم‌ترین اولویت‌ها را کوتاه بگو";getSharedPreferences("jarvis_data",MODE_PRIVATE).edit().putString("pendingWakeCommand",q).apply();startActivity(new Intent(this,MainActivity.class));});todayCard.addView(plan,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(todayCard);
 
         LinearLayout statusCard=card();TextView st=tv("SYSTEM LINK",12);st.setTextColor(accent);statusCard.addView(st);backend=tv("",13);pc=tv("",13);statusCard.addView(backend);statusCard.addView(pc);Button assist=btn("◇ انتخاب JARVIS به‌عنوان دستیار اصلی گوشی");assist.setOnClickListener(v->requestAssistantRole());statusCard.addView(assist,new LinearLayout.LayoutParams(-1,dp(48)));Button check=btn("بررسی دقیق Assistant Readiness");check.setOnClickListener(v->showReadiness());statusCard.addView(check,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(statusCard);
 
