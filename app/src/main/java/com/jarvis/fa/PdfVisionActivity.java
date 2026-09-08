@@ -1,0 +1,26 @@
+package com.jarvis.fa;
+
+import android.app.*;
+import android.content.*;
+import android.graphics.*;
+import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
+import android.os.*;
+import android.view.*;
+import android.widget.*;
+import java.io.*;
+import java.util.*;
+
+public class PdfVisionActivity extends Activity {
+    public static final String EXTRA_URI="pdf_uri";
+    private final int bg=Color.rgb(2,8,16),panel=Color.rgb(7,20,34),accent=Color.rgb(56,225,255),text=Color.WHITE,muted=Color.rgb(145,177,198);
+    private TextView status,result;private EditText question;private Button run;private Uri uri;private VisionEngine vision;private ParcelFileDescriptor fd;private android.graphics.pdf.PdfRenderer renderer;private int maxPages=4;
+    private int dp(int v){return(int)(v*getResources().getDisplayMetrics().density+.5f);}private GradientDrawable shape(int c,int r){GradientDrawable g=new GradientDrawable();g.setColor(c);g.setCornerRadius(dp(r));g.setStroke(dp(1),Color.rgb(17,67,91));return g;}private TextView tv(String s,int z){TextView v=new TextView(this);v.setText(s);v.setTextColor(text);v.setTextSize(z);v.setPadding(dp(12),dp(9),dp(12),dp(9));return v;}private Button btn(String s){Button b=new Button(this);b.setText(s);b.setAllCaps(false);b.setTextColor(text);b.setBackground(shape(panel,18));return b;}
+    @Override public void onCreate(Bundle b){super.onCreate(b);vision=new VisionEngine(this);String u=getIntent().getStringExtra(EXTRA_URI);if(u!=null)uri=Uri.parse(u);build();openPdf();}
+    @Override protected void onDestroy(){super.onDestroy();try{if(renderer!=null)renderer.close();}catch(Exception ignored){}try{if(fd!=null)fd.close();}catch(Exception ignored){}if(vision!=null)vision.shutdown();}
+    private void build(){ScrollView sc=new ScrollView(this);LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(16),dp(20),dp(16),dp(28));root.setBackgroundColor(bg);root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);TextView title=tv("JARVIS // PDF VISION",24);title.setTextColor(accent);root.addView(title);status=tv("در حال آماده‌سازی PDF…",13);status.setTextColor(muted);root.addView(status);question=new EditText(this);question.setHint("مثلاً: مبلغ‌ها و نکات مهم این PDF را استخراج کن");question.setHintTextColor(muted);question.setTextColor(text);question.setBackground(shape(panel,18));root.addView(question,new LinearLayout.LayoutParams(-1,dp(96)));run=btn("◈ تحلیل PDF با JARVIS Vision");run.setEnabled(false);run.setOnClickListener(v->analyze());root.addView(run,new LinearLayout.LayoutParams(-1,dp(54)));result=tv("",14);result.setBackground(shape(panel,20));root.addView(result);TextView note=tv("برای کنترل مصرف و حافظه، حداکثر ۴ صفحه اول در هر نوبت تحلیل می‌شود. هیچ فایل PDF بدون اقدام صریح تو ارسال نمی‌شود.",11);note.setTextColor(muted);root.addView(note);sc.addView(root);setContentView(sc);}
+    private void openPdf(){if(uri==null){status.setText("PDF دریافت نشد.");return;}try{fd=getContentResolver().openFileDescriptor(uri,"r");if(fd==null)throw new IOException("file descriptor unavailable");renderer=new android.graphics.pdf.PdfRenderer(fd);status.setText("PDF READY • "+renderer.getPageCount()+" صفحه");status.setTextColor(accent);run.setEnabled(renderer.getPageCount()>0);}catch(Exception e){status.setText("باز کردن PDF ممکن نشد: "+safe(e.getMessage()));}}
+    private void analyze(){if(renderer==null||renderer.getPageCount()==0)return;run.setEnabled(false);result.setText("");String q=question.getText().toString().trim();if(q.isEmpty())q="این صفحه از PDF را دقیق بررسی کن؛ متن، اعداد، نام‌ها، تاریخ‌ها و نکات مهم را استخراج کن و خلاصه فارسی بده.";int count=Math.min(maxPages,renderer.getPageCount());StringBuilder all=new StringBuilder();analyzePage(0,count,q,all);}
+    private void analyzePage(int index,int count,String q,StringBuilder all){if(index>=count){status.setText("PDF ANALYSIS COMPLETE • "+count+" صفحه");status.setTextColor(accent);result.setText(all.toString());run.setEnabled(true);new ActionReceiptStore(this).add("تحلیل PDF","تحلیل "+count+" صفحه تکمیل شد.");return;}status.setText("در حال تحلیل صفحه "+(index+1)+" از "+count+"…");Bitmap bitmap=null;android.graphics.pdf.PdfRenderer.Page page=null;try{page=renderer.openPage(index);int target=1400;float scale=(float)target/Math.max(1,page.getWidth());int w=Math.max(1,Math.round(page.getWidth()*scale)),h=Math.max(1,Math.round(page.getHeight()*scale));bitmap=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(bitmap);c.drawColor(Color.WHITE);page.render(bitmap,null,null,android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);page.close();page=null;final Bitmap img=bitmap;final int p=index;vision.analyze(img,q,out->{all.append("\n\n--- صفحه ").append(p+1).append(" ---\n").append(out);result.setText(all.toString());img.recycle();analyzePage(p+1,count,q,all);});}catch(Exception e){if(page!=null)try{page.close();}catch(Exception ignored){}if(bitmap!=null&&!bitmap.isRecycled())bitmap.recycle();all.append("\n\nصفحه ").append(index+1).append(": خطا - ").append(safe(e.getMessage()));analyzePage(index+1,count,q,all);}}
+    private String safe(String s){return s==null||s.trim().isEmpty()?"نامشخص":s.trim();}
+}
