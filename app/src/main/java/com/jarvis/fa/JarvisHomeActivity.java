@@ -18,6 +18,7 @@ public class JarvisHomeActivity extends Activity {
     @Override protected void onResume(){super.onResume();hotword.reconcile();refresh();}
 
     private int dp(int v){return(int)(v*getResources().getDisplayMetrics().density+.5f);}
+    private String buildCode(){try{android.content.pm.PackageInfo p=getPackageManager().getPackageInfo(getPackageName(),0);return String.valueOf(android.os.Build.VERSION.SDK_INT>=28?p.getLongVersionCode():p.versionCode);}catch(Exception e){return "?";}}
     private GradientDrawable shape(int color,int radius){GradientDrawable g=new GradientDrawable();g.setColor(color);g.setCornerRadius(dp(radius));g.setStroke(dp(1),stroke);return g;}
     private TextView tv(String s,int size){TextView v=new TextView(this);v.setText(s);v.setTextColor(text);v.setTextSize(size);v.setPadding(dp(12),dp(8),dp(12),dp(8));return v;}
     private TextView label(String s){TextView v=tv(s,10);v.setTextColor(muted);v.setLetterSpacing(.09f);return v;}
@@ -34,7 +35,7 @@ public class JarvisHomeActivity extends Activity {
         TextView title=tv("J A R V I S",29);title.setTextColor(accent);title.setLetterSpacing(.16f);title.setPadding(0,0,0,0);brand.addView(title);
         TextView subtitle=tv("PERSONAL AI",10);subtitle.setTextColor(muted);subtitle.setLetterSpacing(.12f);subtitle.setPadding(0,0,0,0);brand.addView(subtitle);
         head.addView(brand,new LinearLayout.LayoutParams(0,-2,1));
-        TextView build=tv(String.valueOf(BuildConfig.VERSION_CODE),12);build.setGravity(Gravity.CENTER);build.setTextColor(accent);build.setBackground(shape(surface2,14));head.addView(build,new LinearLayout.LayoutParams(dp(42),dp(36)));root.addView(head);root.addView(gap(12));
+        TextView build=tv(buildCode(),12);build.setGravity(Gravity.CENTER);build.setTextColor(accent);build.setBackground(shape(surface2,14));head.addView(build,new LinearLayout.LayoutParams(dp(42),dp(36)));root.addView(head);root.addView(gap(12));
 
         LinearLayout hero=card();hero.setGravity(Gravity.CENTER_HORIZONTAL);hero.setPadding(dp(14),dp(6),dp(14),dp(16));
         PulseView pulse=new PulseView();hero.addView(pulse,new LinearLayout.LayoutParams(-1,dp(220)));
