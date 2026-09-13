@@ -10,8 +10,8 @@ android {
         applicationId "com.jarvis.fa"
         minSdk 26
         targetSdk 35
-        versionCode 41
-        versionName "1.0-daily-driver-readiness"
+        versionCode 43
+        versionName "1.0-smart-daily-driver"
     }
 
     buildTypes {
