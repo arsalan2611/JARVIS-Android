@@ -13,17 +13,11 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <uses-feature android:name="android.hardware.camera.flash" android:required="false"/>
-    <queries>
-        <intent><action android:name="android.speech.RecognitionService"/></intent>
-        <intent><action android:name="android.intent.action.TTS_SERVICE"/></intent>
-    </queries>
+    <queries><intent><action android:name="android.speech.RecognitionService"/></intent><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries>
     <application android:name=".JarvisApp" android:allowBackup="false" android:fullBackupContent="false" android:label="JARVIS فارسی" android:theme="@style/AppTheme" android:usesCleartextTraffic="false">
-        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
-        </provider>
-        <activity android:name=".JarvisHomeActivity" android:screenOrientation="portrait" android:exported="true">
-            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
-        </activity>
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/></provider>
+        <activity android:name=".JarvisHomeActivity" android:screenOrientation="portrait" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+        <activity android:name=".DailyDriverActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".JarvisSetupActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".ConnectedServicesActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".MemoryCenterActivity" android:screenOrientation="portrait" android:exported="false"/>
@@ -38,14 +32,9 @@
         <activity android:name=".FileIntelligenceActivity" android:screenOrientation="portrait" android:exported="false"/>
         <activity android:name=".PdfVisionActivity" android:screenOrientation="portrait" android:exported="false"/>
         <receiver android:name=".ReminderReceiver" android:exported="false"/>
-        <receiver android:name=".BootReceiver" android:enabled="true" android:exported="false">
-            <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter>
-        </receiver>
+        <receiver android:name=".BootReceiver" android:enabled="true" android:exported="false"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter></receiver>
         <service android:name=".WakeWordService" android:exported="false" android:foregroundServiceType="microphone" android:stopWithTask="false"/>
-        <service android:name=".JarvisVoiceInteractionService" android:label="JARVIS" android:permission="android.permission.BIND_VOICE_INTERACTION" android:exported="true">
-            <meta-data android:name="android.voice_interaction" android:resource="@xml/voice_interaction_service"/>
-            <intent-filter><action android:name="android.service.voice.VoiceInteractionService"/></intent-filter>
-        </service>
+        <service android:name=".JarvisVoiceInteractionService" android:label="JARVIS" android:permission="android.permission.BIND_VOICE_INTERACTION" android:exported="true"><meta-data android:name="android.voice_interaction" android:resource="@xml/voice_interaction_service"/><intent-filter><action android:name="android.service.voice.VoiceInteractionService"/></intent-filter></service>
         <service android:name=".JarvisVoiceSessionService" android:permission="android.permission.BIND_VOICE_INTERACTION" android:process=":voice_session" android:exported="true"/>
     </application>
 </manifest>
