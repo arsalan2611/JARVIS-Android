@@ -34,7 +34,7 @@ public class JarvisHomeActivity extends Activity {
         TextView title=tv("J A R V I S",29);title.setTextColor(accent);title.setLetterSpacing(.16f);title.setPadding(0,0,0,0);brand.addView(title);
         TextView subtitle=tv("PERSONAL AI",10);subtitle.setTextColor(muted);subtitle.setLetterSpacing(.12f);subtitle.setPadding(0,0,0,0);brand.addView(subtitle);
         head.addView(brand,new LinearLayout.LayoutParams(0,-2,1));
-        TextView build=tv("32",12);build.setGravity(Gravity.CENTER);build.setTextColor(accent);build.setBackground(shape(surface2,14));head.addView(build,new LinearLayout.LayoutParams(dp(42),dp(36)));root.addView(head);root.addView(gap(12));
+        TextView build=tv(String.valueOf(BuildConfig.VERSION_CODE),12);build.setGravity(Gravity.CENTER);build.setTextColor(accent);build.setBackground(shape(surface2,14));head.addView(build,new LinearLayout.LayoutParams(dp(42),dp(36)));root.addView(head);root.addView(gap(12));
 
         LinearLayout hero=card();hero.setGravity(Gravity.CENTER_HORIZONTAL);hero.setPadding(dp(14),dp(6),dp(14),dp(16));
         PulseView pulse=new PulseView();hero.addView(pulse,new LinearLayout.LayoutParams(-1,dp(220)));
@@ -54,7 +54,10 @@ public class JarvisHomeActivity extends Activity {
 
         LinearLayout todayCard=card();todayCard.addView(label("TODAY"));today=tv("",14);today.setPadding(0,dp(4),0,dp(8));todayCard.addView(today);Button plan=btn("خلاصه و اولویت‌بندی امروز");plan.setOnClickListener(v->{String q="برنامه و یادآوری‌های امروز من را بررسی کن و مهم‌ترین اولویت‌ها را کوتاه بگو";getSharedPreferences("jarvis_data",MODE_PRIVATE).edit().putString("pendingWakeCommand",q).apply();startActivity(new Intent(this,MainActivity.class));});todayCard.addView(plan,new LinearLayout.LayoutParams(-1,dp(46)));root.addView(todayCard);
 
-        LinearLayout system=card();system.addView(label("JARVIS SYSTEM"));systemLine=tv("",12);systemLine.setTextColor(muted);systemLine.setPadding(0,dp(4),0,dp(8));system.addView(systemLine);Button setup=btn("تنظیمات و آماده‌سازی JARVIS");setup.setOnClickListener(v->startActivity(new Intent(this,JarvisSetupActivity.class)));system.addView(setup,new LinearLayout.LayoutParams(-1,dp(48)));root.addView(system);
+        LinearLayout system=card();system.addView(label("JARVIS SYSTEM"));systemLine=tv("",12);systemLine.setTextColor(muted);systemLine.setPadding(0,dp(4),0,dp(8));system.addView(systemLine);
+        Button setup=btn("تنظیمات و آماده‌سازی JARVIS");setup.setOnClickListener(v->startActivity(new Intent(this,JarvisSetupActivity.class)));system.addView(setup,new LinearLayout.LayoutParams(-1,dp(48)));
+        Button recheck=btn("بررسی دوباره Daily Driver");recheck.setOnClickListener(v->{Intent i=new Intent(this,DailyDriverActivity.class);i.putExtra("force_check",true);startActivity(i);});system.addView(recheck,new LinearLayout.LayoutParams(-1,dp(46)));
+        root.addView(system);
 
         LinearLayout receipt=card();receipt.addView(label("LAST ACTION"));lastAction=tv("",12);lastAction.setTextColor(muted);lastAction.setPadding(0,dp(3),0,0);receipt.addView(lastAction);root.addView(receipt);
         TextView foot=tv("JARVIS  •  PRIVATE BY DESIGN  •  USER CONTROLLED",9);foot.setTextColor(Color.rgb(72,100,118));foot.setGravity(Gravity.CENTER);foot.setLetterSpacing(.05f);root.addView(foot);
@@ -64,7 +67,7 @@ public class JarvisHomeActivity extends Activity {
     private LinearLayout tool(String title,String sub,Runnable action){LinearLayout c=new LinearLayout(this);c.setOrientation(LinearLayout.VERTICAL);c.setPadding(dp(14),dp(14),dp(14),dp(14));c.setGravity(Gravity.CENTER_VERTICAL);c.setBackground(shape(surface,20));c.setOnClickListener(v->action.run());TextView t=tv(title,14);t.setTextColor(accent);t.setPadding(0,0,0,dp(2));TextView s=tv(sub,11);s.setTextColor(muted);s.setPadding(0,0,0,0);c.addView(t);c.addView(s);return c;}
     private LinearLayout.LayoutParams toolLp(){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(82),1);p.setMargins(dp(4),dp(4),dp(4),dp(4));return p;}
 
-    private void refresh(){boolean active=hotword.isSystemAssistant();AssistantReadiness.Report ar=new AssistantReadiness(this).inspect();assistantPill.setText(active?"ASSISTANT • ACTIVE":"ASSISTANT • SETUP");assistantPill.setTextColor(active?good:warn);readinessPill.setText("READY • "+ar.score+"%");readinessPill.setTextColor(ar.score>=80?good:(ar.score>=55?warn:muted));String r=reminders.summary();today.setText(r==null||r.trim().isEmpty()?"امروز یادآوری فعالی نداری.":r);boolean backendOk=prod.productionMode()&&prod.backendReady();boolean pcOk=bridge.configured();systemLine.setText((backendOk?"AI امن آماده":"AI نیاز به تنظیم")+"   •   "+(pcOk?"PC متصل":"PC تنظیم نشده"));systemLine.setTextColor(backendOk?good:muted);String last=receipts.latest();lastAction.setText(last==null||last.trim().isEmpty()?"هنوز اقدامی ثبت نشده است.":last);}
+    private void refresh(){boolean active=hotword.isSystemAssistant();AssistantReadiness.Report ar=new AssistantReadiness(this).inspect();assistantPill.setText(active?"ASSISTANT • ACTIVE":"ASSISTANT • SETUP");assistantPill.setTextColor(active?good:warn);readinessPill.setText("READY • "+ar.score+"%");readinessPill.setTextColor(ar.score>=80?good:(ar.score>=55?warn:muted));String r=reminders.summary();today.setText(r==null||r.trim().isEmpty()?"امروز یادآوری فعالی نداری.":r);boolean backendOk=prod.productionMode()&&prod.backendReady();boolean pcOk=bridge.configured();systemLine.setText((backendOk?"AI امن آماده":"AI نیاز به تنظیم")+"   •   "+(pcOk?"PC تنظیم شده":"PC تنظیم نشده"));systemLine.setTextColor(backendOk?good:muted);String last=receipts.latest();lastAction.setText(last==null||last.trim().isEmpty()?"هنوز اقدامی ثبت نشده است.":last);}
 
     private class PulseView extends View{
         private final Paint ring=new Paint(Paint.ANTI_ALIAS_FLAG),fill=new Paint(Paint.ANTI_ALIAS_FLAG),dot=new Paint(Paint.ANTI_ALIAS_FLAG);private float phase;private ValueAnimator anim;
