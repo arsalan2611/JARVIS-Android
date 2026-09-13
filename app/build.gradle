@@ -10,12 +10,16 @@ android {
         applicationId "com.jarvis.fa"
         minSdk 26
         targetSdk 35
-        versionCode 38
-        versionName "1.0-routines"
+        versionCode 39
+        versionName "1.0-final-hardening"
     }
 
     buildTypes {
+        debug {
+            debuggable true
+        }
         release {
+            debuggable false
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
