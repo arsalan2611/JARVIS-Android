@@ -19,11 +19,12 @@ public class DiagnosticsActivity extends Activity {
         LinearLayout row=new LinearLayout(this);Button test=btn("✓ تست کامل");test.setOnClickListener(v->runTest());row.addView(test,new LinearLayout.LayoutParams(0,dp(52),1));Button refresh=btn("↻ تازه‌سازی");refresh.setOnClickListener(v->refresh());row.addView(refresh,new LinearLayout.LayoutParams(0,dp(52),1));root.addView(row);
         report=tv("",12);report.setTextIsSelectable(true);report.setBackgroundColor(panel);root.addView(report);
         LinearLayout actions=new LinearLayout(this);Button copy=btn("کپی گزارش");copy.setOnClickListener(v->copy());actions.addView(copy,new LinearLayout.LayoutParams(0,dp(50),1));Button share=btn("اشتراک گزارش");share.setOnClickListener(v->share());actions.addView(share,new LinearLayout.LayoutParams(0,dp(50),1));root.addView(actions);
+        Button ack=btn("تأیید بررسی Crash قبلی");ack.setOnClickListener(v->{store.acknowledgeCrash();store.info("RECOVERY","Previous crash acknowledged by user");refresh();status.setText("RECOVERY • وضعیت Crash بررسی شد");});root.addView(ack,new LinearLayout.LayoutParams(-1,dp(48)));
         Button clear=btn("پاک کردن لاگ محلی");clear.setOnClickListener(v->{store.clear();store.info("DIAGNOSTICS","Log cleared by user");refresh();});root.addView(clear,new LinearLayout.LayoutParams(-1,dp(48)));
         sc.addView(root);setContentView(sc);
     }
     void runTest(){status.setText("DIAGNOSTICS • در حال تست...");store.info("SELFTEST","Started from diagnostics");selfTest.run(r->{store.info("SELFTEST",r);report.setText(r+"\n\n"+store.report());status.setText("DIAGNOSTICS • تست کامل شد");});}
-    void refresh(){report.setText(store.report());}
+    void refresh(){report.setText(store.report());status.setText(store.hasPendingCrash()?"RECOVERY • Crash قبلی ثبت شده":"DIAGNOSTICS • آماده");}
     void copy(){ClipboardManager c=(ClipboardManager)getSystemService(CLIPBOARD_SERVICE);c.setPrimaryClip(ClipData.newPlainText("JARVIS Diagnostic Report",report.getText()));status.setText("DIAGNOSTICS • گزارش کپی شد");}
     void share(){try{Intent i=new Intent(Intent.ACTION_SEND);i.setType("text/plain");i.putExtra(Intent.EXTRA_SUBJECT,"JARVIS Diagnostic Report");i.putExtra(Intent.EXTRA_TEXT,report.getText().toString());startActivity(Intent.createChooser(i,"اشتراک گزارش JARVIS"));}catch(Exception e){store.error("SHARE",e);status.setText("اشتراک گزارش ممکن نشد");}}
     @Override protected void onDestroy(){super.onDestroy();selfTest.shutdown();}
